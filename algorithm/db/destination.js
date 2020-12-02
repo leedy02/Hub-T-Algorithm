@@ -1,9 +1,9 @@
 const dbConnection = require('../config/database');
 const getQuery = require('./query');
-const {destination} = require('../public/javascripts/destination');
+const {destination} = require('../public/javascripts/customer');
 
 module.exports ={
-    selectAllDestination : function(){
+    selectAllDestination : function(callback){
         dbConnection((conn)=>{
             conn.query(getQuery.selectAllDestination,function(err,rows){
                 if(err){
@@ -16,8 +16,10 @@ module.exports ={
                         destination_list[rows[i].id]=d;
                     }
                     console.log("destination 다 불러옴")
+                    callback(null);
                 }
             })
+            conn.release();
         })
     }
 }
