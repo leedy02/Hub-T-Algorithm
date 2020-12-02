@@ -1,5 +1,5 @@
 module.exports={
     selectAllDestination:"SELECT * FROM destination",
-    insertUserLand:"INSERT INTO user_land VALUES(?,?)"
+    updateUserLand:"UPDATE user_land SET land=? WHERE id=?"
     
 }

@@ -1,8 +1,8 @@
 const { Taxi } = require('./public/javascripts/taxi')
 var dbDestination = require('./db/destination');
 var dbUserLand = require('./db/user_land');
+var dbDriveInfo = require('./db/drive_info');
 var async = require('async');
-var socket = require('')
 
 global.customer_list = [];
 global.taxi_list = [];
@@ -18,13 +18,13 @@ async function taxi_generate(callback) {
 async function user_land_generate(callback) {
     for (let i = 0; i < customer_list.length; i++) {
         if (customer_list[i] != "undefined") {
-            dbUserLand.insertUserLand(customer[i].id, customer[i].land);
+            dbUserLand.updateUserLand(customer[i].id, customer[i].land);
         }
     }
     callback(null);
 }
 
-async.series([dbDestination.selectAllDestination, user_land_generate, taxi_generate]);
+async.series([dbDriveInfo.deleteDriveInfo,dbDestination.selectAllDestination, user_land_generate, taxi_generate]);
 
 setInterval(() => {
     taxi_list.map(async t => {

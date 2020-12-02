@@ -1,6 +1,6 @@
 const dbConnection = require('../config/database');
 const getQuery = require('./query');
-const {destination} = require('../public/javascripts/customer');
+const {Customer} = require('../public/javascripts/customer');
 
 module.exports ={
     selectAllDestination : function(callback){
@@ -11,7 +11,7 @@ module.exports ={
                 }
                 else{
                     for(let i=0;i<rows.length;i++){
-                        var d = new destination(rows[i].id,rows[i].total_dist,rows[i].cost,
+                        var d = new Customer(rows[i].id,rows[i].total_dist,rows[i].cost,
                             rows[i].dest_x,rows[i].dest_y,rows[i].depar_x,rows[i].depar_y,JSON.parse(rows[i].route))
                         destination_list[rows[i].id]=d;
                     }

@@ -3,9 +3,9 @@ const { GPS } = require('../public/javascripts/gps');
 const getQuery = require('./query');
 
 module.exports = {
-    insertUserLand : function(id,land){
+    updateUserLand : function(id,land){
         dbConnection((conn)=>{
-            conn.query(getQuery.insertUserLand,[id,land],function(err,rows){
+            conn.query(getQuery.insertUserLand,[land,id],function(err,rows){
                 if(err){
                     throw err
                 }
@@ -13,6 +13,7 @@ module.exports = {
                     console.log(id," land 삽입");
                 }
             })
+            conn.release();
         })
     }
 }

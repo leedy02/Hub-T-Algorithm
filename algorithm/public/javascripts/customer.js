@@ -1,7 +1,6 @@
 const {GPS}=require('./gps');
-const dbUserLand = require('../../db/user_land');
 
-class destination{
+class Customer{
     constructor(id,total_dist,cost,depar_x,depar_y,dest_x,dest_y,route){
         
         this.id = id;
@@ -19,9 +18,7 @@ class destination{
         this.land = GPS.getLand(this.current);
 
         this.state = "WAIT";
-
-        dbUserLand.insertUserLand(this.id,this.land);
     }
 }
 
-module.exports = {destination};
+module.exports = {Customer};
