@@ -1,5 +1,22 @@
 module.exports={
     selectAllDestination:"SELECT * FROM destination",
-    updateUserLand:"UPDATE user_land SET land=? WHERE id=?"
-    
+    updateUserLand:"UPDATE user_land SET land=? WHERE id=?",
+    insertDestination: "INSERT INTO destination_ VALUES (?,?,?,?,?,?,?,?)",
+    deleteDestination: "DELETE FROM destination_ WHERE id >=1 AND id <=100",
+    insertLand: "INSERT INTO taxi_land VALUES (?,?)",
+    updateLand: "UPDATE taxi_land SET land_id=? WHERE taxi_id = ?",
+    deleteLand: "DELETE FROM taxi_land",
+    insertDriveInfo: "INSERT INTO drive_info VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+    deleteDriveInfo: "DELETE FROM drive_info",
+    updateDriveInfoCurLoc: "UPDATE drive_info SET cur_loc_x=?,cur_loc_y=? WHERE taxi_id=?",
+    updateDriveInfoNoSearch: "UPDATE drive_info SET no_search=? WHERE drive_id=?",
+    updateDriveInfo: "UPDATE drive_info SET guest_id=?, route=?, total_dist=?,cost=?,dest_x=?,dest_y=? WHERE drive_id = ?",
+    deleteDriveInfoCustomer: "DELETE FROM drive_info WHERE host_id in (?) or guest_id in (?)",
+    selectDestination: "SELECT * FROM destination_",
+    selectIdDestination: "SELECT * FROM destination_ WHERE id = ?",
+    insertUserLand: "INSERT INTO user_land_ VALUES(?,?)",
+    deleteUserLand: "DELETE FROM user_land_",
+    updateUserLand: "UPDATE user_land_ SET land_id= ? WHERE id= ?",
+    deleteIdDestination : "DELETE FROM destination_ WHERE id = ?",
+    deleteIdUserLand : "DELETE FROM user_land_ WHERE id = ?"
 }
