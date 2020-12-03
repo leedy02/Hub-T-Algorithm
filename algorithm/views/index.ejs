@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Algorithm View</title>
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=7c017afe2b085c76f8dae9f846d64dec"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascripts/gps.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            padding: 0px;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div style="z-index: 1; position: absolute; bottom: 0; right: 0;">
+        <button onclick="createHost()">host 경로 생성</button>
+        <button onclick="callAlgorithm()">알고리즘 호출!</button>
+    </div>
+    <script>
+        var c_marker = [];
+        var t_marker = [];
+        var c_data = null;
+        var t_data = null;
+
+        var socket = io();
+
+        socket.on("taxi", data => {
+            t_data = data;
+            drawTaxiMarker();
+        })
+
+        socket.on("customer", data => {
+            console.log("전송받음");
+            c_data = data;
+            drawCustomerMarker();
+        })
+
+        // 지도 생성
+        var map = new kakao.maps.Map(document.getElementById('map'), {
+            center: new kakao.maps.LatLng(37.45149, 126.6542767),
+            level: 6
+        });
+
+        // 가상의 고객 생성
+        var manual = "idle";
+        var manual_data = {
+            start: null,
+            end: null
+        }
+        kakao.maps.event.addListener(map, "click", (e) => {
+            if(manual == "start") {
+                manual_data.start = new GPS(e.latLng.getLat(),e.latLng.getLng());
+                manual = "end";
+                console.log("호스트 경로 - 목적지");
+            }
+            else if(manual == "end") {
+                manual_data.end = new GPS(e.latLng.getLat(),e.latLng.getLng());
+                manual = "idle";
+                console.log("호스트 경로 - 설정 완료");
+                socket.emit("taxi", manual_data);
+            }
+        })
+
+        function createHost() {
+            if(manual == "idle") {
+                manual = "start";
+                console.log("호스트 경로 - 출발지");
+            }
+        }
+
+        function callAlgorithm() {
+            console.log("알고리즘 호출");
+        }
+
+        // 마커 생성
+        function drawCustomerMarker() {
+            for(c of c_data) {
+                if(c != null) c_marker.push(drawMarker("customer_00", c.current));
+            }
+        }
+
+        function drawTaxiMarker() {
+            t_marker.map(t => t.setMap(null));
+            for(t of t_data) {
+                if(t != null) t_marker.push(drawMarker("taxi", t.current));
+            }
+        }
+
+        function drawMarker(type, latlng) {
+            var position = new kakao.maps.LatLng(latlng.latitude, latlng.longitude);
+            var image = new kakao.maps.MarkerImage('./images/' + type + '.png', new kakao.maps.Size(30, 30));
+            var point = new kakao.maps.Marker({ position: position, image: image });
+            point.setMap(map);
+            return point;
+        }
+    </script>
+</body>
+
+</html>

@@ -3,30 +3,31 @@ var dbDestination = require('./db/destination');
 var dbUserLand = require('./db/user_land');
 var dbDriveInfo = require('./db/drive_info');
 var async = require('async');
+const customer = require('./public/javascripts/customer');
 
 global.customer_list = [];
 global.taxi_list = [];
 global.drive_list = [];
 
-async function taxi_generate(callback) {
-    for (let i = 0; i < 1; i++) {
-        taxi_list.push(new Taxi())
-    }
-    callback(null);
-}
+// async function taxi_generate(callback) {
+//     for (let i = 0; i < 1; i++) {
+//         taxi_list.push(new Taxi())
+//     }
+//     callback(null);
+// }
 
 async function user_land_generate(callback) {
+    // console.log(customer_list);
     for (let i = 0; i < customer_list.length; i++) {
-        if (customer_list[i] != "undefined") {
-            dbUserLand.updateUserLand(customer[i].id, customer[i].land);
+        if (customer_list[i] != null) {
+            dbUserLand.updateUserLand(customer_list[i].id, customer_list[i].land);
         }
     }
-    callback(null);
 }
 
-async.series([dbDriveInfo.deleteDriveInfo,dbDestination.selectAllDestination, user_land_generate, taxi_generate]);
+async.series([dbDriveInfo.deleteDriveInfo,dbDestination.selectAllDestination, user_land_generate]);
 
-setInterval(() => {
+setInterval(async () => {
     taxi_list.map(async t => {
         // 택시가 멈춰있다면
         if (t.state == "STOP" && t.customer.length == 0) {
@@ -92,10 +93,23 @@ module.exports = function (server) {
 
     io.on('connection', socket => {
         console.log("connected");
+        var send = false;
         const loop = setInterval(() => {
-            socket.emit(customer_list)
-            socket.emit(taxi_list);
+            if(!send && customer_list.length == 2489) {
+                socket.emit('customer', customer_list);
+                send = true;
+            }
+            socket.emit('taxi', taxi_list);
+            console.log(taxi_list);
         }, 1000);
+
+        socket.on("taxi", data => {
+            if(taxi_list.length == 0) {
+                var taxi = new Taxi(data.start);
+                taxi.setDestination(data.end);
+                taxi_list.push(taxi);
+            }
+        })
 
         socket.on('disconnect', socket => {
             clearInterval(loop);

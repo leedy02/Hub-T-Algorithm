@@ -3,10 +3,10 @@ const { GPS } = require("./gps");
 class Taxi {
     static #id = 1;
     #interval = null;
-    constructor() {
+    constructor(current = null) {
         this.id = Taxi.#id++;
 
-        this.current = current != nul ? current : GPS.getRandomValue();
+        this.current = current != null ? current : GPS.getRandomValue();
 
         this.destination = null;
 
@@ -91,4 +91,4 @@ class Taxi {
     }
 }
 
-module.exports = { taxi };
+module.exports = { Taxi };

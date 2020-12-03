@@ -10,7 +10,7 @@ module.exports = {
                     throw err
                 }
                 else{
-                    console.log(id," land 삽입");
+                    // console.log(id," land 삽입");
                 }
             })
             conn.release();

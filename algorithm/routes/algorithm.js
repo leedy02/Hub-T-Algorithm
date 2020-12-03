@@ -1,8 +1,8 @@
 const { PythonShell } = require("python-shell");
 module.exports.candidates_and_route = async function (host_id, algorithm_num) {
   let options = {
-    pythonPath: 'C:/Anaconda3/python.exe',
-    scriptPath: 'C:/Users/User/Desktop/Hub-T-Command/taxi/routes',
+    pythonPath: '/usr/bin/python3',
+    scriptPath: '/Users/llsg822/Development/hub_t_comamnd/taxi/routes',
     args: [host_id,algorithm_num],
     mode: 'json',
     pythonOptions: ['-u']
