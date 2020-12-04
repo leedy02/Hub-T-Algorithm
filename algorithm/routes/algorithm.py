@@ -66,7 +66,7 @@ def first_candidate(host_id):
         print(json.dumps(ret))
         return
     # 직선경로 알고리즘, 벡터각 알고리즘, 직선경로 가중치 알고리즘에서 선택.
-    second_cand(host)id,first_candidate_arr
+    second_candidate(host_id,first_candidate_arr)
 
 
 def chk_pref(a_prof, a_pref, b_prof, b_pref):
