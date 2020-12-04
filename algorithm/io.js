@@ -2,12 +2,15 @@ const { Taxi } = require('./public/javascripts/taxi')
 var dbDestination = require('./db/destination');
 var dbUserLand = require('./db/user_land');
 var dbDriveInfo = require('./db/drive_info');
+const { GPS } = require('./public/javascripts/gps');
 var async = require('async');
-const customer = require('./public/javascripts/customer');
+const { Customer } = require('./public/javascripts/customer');
+const { DriveInfo } = require('./public/javascripts/drive_info');
 
 global.customer_list = [];
 global.taxi_list = [];
 global.drive_list = [];
+
 
 // async function taxi_generate(callback) {
 //     for (let i = 0; i < 1; i++) {
@@ -25,25 +28,17 @@ async function user_land_generate(callback) {
     }
 }
 
-async.series([dbDriveInfo.deleteDriveInfo,dbDestination.selectAllDestination, user_land_generate]);
+async.series([dbDriveInfo.deleteDriveInfo, dbDestination.selectAllDestination, user_land_generate]);
 
 setInterval(async () => {
     taxi_list.map(async t => {
         // 택시가 멈춰있다면
-        if (t.state == "STOP" && t.customer.length == 0) {
-            // 승객이 없는 경우
-            await t.setDestination(GPS.getRandomValue());
-            t.drive();
-        }
-        else if (t.state == "STOP" && t.customer.length == 1) {
+        if (t.state == "STOP" && t.customer.length == 1) {
             // 택시가 승객에게 도착
             var customer = t.customer[0];
+            console.log(customer.state);
             if (customer.state == "MATCH") {
                 customer.state = "RIDE"
-                await t.setDestination(customer.destination);
-                const d = new DriveInfo(t, customer);
-                await dbDriveInfo.insertDriveInfo(d);
-                drive_list.push(d);
                 t.drive()
                 //join 함수 호출시 횟수도 넘겨줌
             }
@@ -57,35 +52,11 @@ setInterval(async () => {
                     }
                     customer.state = "ARRIVE"
                     t.customer = [];
+                    taxi_list.pop();
                 }
             }
         }
     })
-    //
-    //빈택시 잡기 -> 택시가 customer를 선택하는 것으로 바꿈
-    for (t of taxi_list) {
-        if (t.customer.length == 0) {
-            var customer = null;
-            var shortest = 10000;
-            for (c of customer_list) {
-                //wait 상태에 있는 것 중 가장 짧은 상태에 있는 거 가져옴
-                if (c.state == "WAIT") {
-                    var distance = GPS.getDistance(t.current, c.current);
-                    if (shortest > distance) {
-                        customer = c;
-                        shortest = distance;
-                    }
-                }
-            }
-            if (customer != null) {
-                customer.state = "MATCH";
-                t.customer.push(customer);
-                await t.setDestination(customer.current);
-                t.index = 0;
-                t.drive();
-            }
-        }
-    }
 }, 1000)
 
 module.exports = function (server) {
@@ -95,22 +66,43 @@ module.exports = function (server) {
         console.log("connected");
         var send = false;
         const loop = setInterval(() => {
-            if(!send && customer_list.length == 2489) {
+            if (!send && customer_list.length == 2489) {
+                console.log(customer_list[customer_list.length - 1])
                 socket.emit('customer', customer_list);
                 send = true;
             }
             socket.emit('taxi', taxi_list);
-            console.log(taxi_list);
         }, 1000);
 
-        socket.on("taxi", data => {
-            if(taxi_list.length == 0) {
+        socket.on("taxi", async data => {
+            if (taxi_list.length == 0) {
                 var taxi = new Taxi(data.start);
-                taxi.setDestination(data.end);
+                await taxi.setDestination(data.end);
+                var customer = new Customer(customer_list.length);
+                customer.host(data);
+                taxi.customer.push(customer);
+                const d = new DriveInfo(taxi, customer);
+                drive_list.push(d);
+                await dbDriveInfo.insertDriveInfo(d)
                 taxi_list.push(taxi);
             }
         })
-
+        socket.on('algorithm', async data => {
+            if (data) {
+                var candidate = {
+                    first: null,
+                    second: null,
+                    third: null
+                }
+                taxi_list[taxi_list.length - 1].driveClear();
+                candidate.first = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 1);
+                candidate.second = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 2);
+                candidate.third = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 3);
+                if (candidate.first != null && candidate.second != null && candidate.third != null) {
+                    socket.emit("candidate", candidate);
+                }
+            }
+        })
         socket.on('disconnect', socket => {
             clearInterval(loop);
             console.log("disconnected");

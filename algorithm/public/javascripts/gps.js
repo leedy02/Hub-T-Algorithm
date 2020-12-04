@@ -13,11 +13,11 @@ class GPS {
         start: new GPS(37.3483704457075, 126.61211735599368),
         end: new GPS(37.609012804993775,126.78001465019845)
     }
-    constructor(x,y){
+    constructor(latitude,longitude){
 
-        this.latitude = y;
+        this.latitude = latitude;
         
-        this.longitude = x;
+        this.longitude = longitude;
 
     }
     static getRandomValue() {

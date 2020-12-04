@@ -1,5 +1,7 @@
 const { GPS } = require("./gps");
+var dbDriveInfo = require("../../db/drive_info");
 
+const updateInterval = 100;
 class Taxi {
     static #id = 1;
     #interval = null;
@@ -16,7 +18,9 @@ class Taxi {
 
         this.index = 0;
 
-        this.velocity = 0;
+        this.velocity = (300 * 1000) / (60 * 60);
+
+        this.customer=[];
 
         this.state = "STOP"
     }
@@ -27,25 +31,15 @@ class Taxi {
         clearInterval(this.#interval);
         this.waypoint = [];
         this.destination = destination;
+        console.log(this.destination)
         //customer가 없을때는 route를 새로 설정
-        if (this.customer.length == 0) {
-            const data = await GPS.getRoute(this.current, this.destination);
-            this.waypoint = data.waypoint;
-            this.route = data.route;
-        }
-        else {
-            //customer가 있을 때 상태가 MATCH이면 현재 위치로 부터 고객의 위치로 경로 설정
-            if (this.customer[0].state == "MATCH") {
-                const data = await GPS.getRoute(this.current, this.destination);
-                this.waypoint = data.waypoint;
-                this.route = data.route;
-
-            } else {
-                //상태가 RIDE 일 경우 기존의 customer route를 사용
-                this.route = this.customer[0].route
-                this.waypoint = GPS.getWayPoint(this.route);
-            }
-        }
+        const data = await GPS.getRoute(this.current, this.destination);
+        this.waypoint = data.waypoint;
+        this.route = data.route;
+    }
+    driveClear(){
+        clearInterval(this.#interval);
+        this.state="JOIN";
     }
 
     drive() {
@@ -88,6 +82,10 @@ class Taxi {
                 await dbDriveInfo.updateDriveInfoCurLoc(dbtaxiCurLoc);
             }
         }, updateInterval);
+    }
+    updateCurLoc() {
+        //console.log(this.id, this.current)
+        return { id: this.id, current: this.current }
     }
 }
 

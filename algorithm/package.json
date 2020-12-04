@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "async": "3.2.0",
+    "axios": "0.21.0",
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
     "ejs": "^3.1.5",
@@ -14,6 +15,7 @@
     "http-errors": "~1.6.3",
     "morgan": "~1.9.1",
     "mysql": "2.18.1",
+    "python-shell": "2.0.3",
     "socket.io": "^3.0.3"
   }
 }

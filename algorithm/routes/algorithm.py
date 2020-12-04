@@ -60,8 +60,6 @@ def first_candidate(host_id):
         chk = conn.select_d([i])
         if len(chk) == 0:
             continue
-        if int(i[0]) > 100:
-            continue
         ret['first_candidate'].append(i[0])
         first_candidate_arr.append(i[0])
     if len(first_candidate_arr) == 0:

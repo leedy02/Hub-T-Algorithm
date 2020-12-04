@@ -5,7 +5,7 @@ const getQuery = require('./query');
 module.exports = {
     updateUserLand : function(id,land){
         dbConnection((conn)=>{
-            conn.query(getQuery.insertUserLand,[land,id],function(err,rows){
+            conn.query(getQuery.updateUserLand,[id,land],function(err,rows){
                 if(err){
                     throw err
                 }

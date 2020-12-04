@@ -50,6 +50,11 @@
             drawCustomerMarker();
         })
 
+        socket.on("candidate",data=>{
+            console.log("후보군 받아옴");
+            console.log(data);
+        })
+
         // 지도 생성
         var map = new kakao.maps.Map(document.getElementById('map'), {
             center: new kakao.maps.LatLng(37.45149, 126.6542767),
@@ -84,6 +89,8 @@
         }
 
         function callAlgorithm() {
+            var algorithm = true;
+            socket.emit("algorithm",algorithm)
             console.log("알고리즘 호출");
         }
 

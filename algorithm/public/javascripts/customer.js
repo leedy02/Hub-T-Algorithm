@@ -9,15 +9,21 @@ class Customer{
 
         this.cost = cost;
 
-        this.current = new GPS(depar_x,depar_y);
+        this.current = new GPS(depar_y,depar_x);
 
-        this.destination = new GPS(dest_x,dest_y);
+        this.destination = new GPS(dest_y,dest_x);
 
         this.route = route;
 
         this.land = GPS.getLand(this.current);
 
         this.state = "WAIT";
+    }
+
+    host(data){
+        this.current = data.start;
+        this.destination = data.end;
+        this.state = "MATCH";
     }
 }
 
