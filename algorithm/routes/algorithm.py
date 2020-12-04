@@ -66,12 +66,7 @@ def first_candidate(host_id):
         print(json.dumps(ret))
         return
     # 직선경로 알고리즘, 벡터각 알고리즘, 직선경로 가중치 알고리즘에서 선택.
-    if sys.argv[2] == 1 or sys.argv[2] == '1':
-        third_candidate_1(host_id,first_candidate_arr)
-    elif sys.argv[2] == 2 or sys.argv[2] == '2':
-        third_candidate_2(host_id,first_candidate_arr)
-    elif sys.argv[2] == 3 or sys.argv[2] == '3':
-        third_candidate_weight_1(host_id, first_candidate_arr)
+    second_cand(host)id,first_candidate_arr
 
 
 def chk_pref(a_prof, a_pref, b_prof, b_pref):
@@ -91,7 +86,12 @@ def second_candidate(host_id, candidate_arr):
     if len(second_candidate_arr) == 0:
         print(json.dumps(ret))
         return
-    third_candidate_1(host_id,second_candidate_arr)
+    if sys.argv[2] == 1 or sys.argv[2] == '1':
+        third_candidate_1(host_id, second_candidate_arr)
+    elif sys.argv[2] == 2 or sys.argv[2] == '2':
+        third_candidate_2(host_id, second_candidate_arr)
+    elif sys.argv[2] == 3 or sys.argv[2] == '3':
+        third_candidate_weight_1(host_id, second_candidate_arr)
 
 
 def third_candidate_1(host_id, candidate_arr):
@@ -110,8 +110,6 @@ def third_candidate_1(host_id, candidate_arr):
         if dist_sum <= 1.0*(host_dist+guest_dist):
             mn = min(mn,dist_sum/(host_dist+guest_dist))
             third_candidate_arr.append(candidate_arr[i])
-            if len(third_candidate_arr) == 5:
-                break
     if len(third_candidate_arr) == 0:
         print(json.dumps(ret))
         return
@@ -131,8 +129,6 @@ def third_candidate_2(host_id, candidate_arr):
         guest_v = [guest_e[0] - guest_s[0], guest_e[1] - guest_s[1]]
         if ip1(host_v,guest_v)/ip2(host_v,guest_v) > math.sqrt(2)/2:
             third_candidate_arr.append(candidate_arr[i])
-            if len(third_candidate_arr) == 5:
-                break
     if len(third_candidate_arr) == 0:
         print(json.dumps(ret))
         return
@@ -162,8 +158,6 @@ def third_candidate_weight_1(host_id, candidate_arr):
         if dist_sum <= 1.0 * (host_dist + guest_dist):
             mn = min(mn, dist_sum / (host_dist + guest_dist))
             third_candidate_arr.append(candidate_arr[i])
-            if len(third_candidate_arr) == 5:
-                break
     if len(third_candidate_arr) == 0:
         print(json.dumps(ret))
         return
