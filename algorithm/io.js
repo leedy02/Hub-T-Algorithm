@@ -36,7 +36,6 @@ setInterval(async () => {
         if (t.state == "STOP" && t.customer.length == 1) {
             // 택시가 승객에게 도착
             var customer = t.customer[0];
-            console.log(customer.state);
             if (customer.state == "MATCH") {
                 customer.state = "RIDE"
                 t.drive()
@@ -67,7 +66,6 @@ module.exports = function (server) {
         var send = false;
         const loop = setInterval(() => {
             if (!send && customer_list.length == 2489) {
-                console.log(customer_list[customer_list.length - 1])
                 socket.emit('customer', customer_list);
                 send = true;
             }
@@ -85,6 +83,7 @@ module.exports = function (server) {
                 drive_list.push(d);
                 await dbDriveInfo.insertDriveInfo(d)
                 taxi_list.push(taxi);
+                console.log("택시 삽입 완료");
             }
         })
         socket.on('algorithm', async data => {
@@ -98,8 +97,9 @@ module.exports = function (server) {
                 candidate.first = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 1);
                 candidate.second = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 2);
                 candidate.third = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 3);
-                if (candidate.first != null && candidate.second != null && candidate.third != null) {
+                if (candidate.first != null && candidate.second != null && candidate.third != null){
                     socket.emit("candidate", candidate);
+                    console.log("알고리즘 데이터 수신 완료");
                 }
             }
         })

@@ -31,7 +31,6 @@ class Taxi {
         clearInterval(this.#interval);
         this.waypoint = [];
         this.destination = destination;
-        console.log(this.destination)
         //customer가 없을때는 route를 새로 설정
         const data = await GPS.getRoute(this.current, this.destination);
         this.waypoint = data.waypoint;
