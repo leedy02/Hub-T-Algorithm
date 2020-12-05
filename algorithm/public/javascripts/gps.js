@@ -47,7 +47,7 @@ class GPS {
     }
 
     static getLand(position) {
-        return parseInt(position.latitude * 100) + parseInt(position.longitude * 100) * 36000;
+        return parseInt(position.latitude * 100) + parseInt(position.longitude * 100) * 10000;
     }
 
     static async getRoute(current, destination){

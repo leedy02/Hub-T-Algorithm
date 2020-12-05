@@ -12,7 +12,7 @@ module.exports ={
                 else{
                     for(let i=0;i<rows.length;i++){
                         var d = new Customer(rows[i].id,rows[i].total_dist,rows[i].cost,
-                            rows[i].dest_x,rows[i].dest_y,rows[i].depar_x,rows[i].depar_y,JSON.parse(rows[i].route))
+                            rows[i].depar_x,rows[i].depar_y,rows[i].dest_x,rows[i].dest_y,JSON.parse(rows[i].route))
                         customer_list[rows[i].id]=d;
                     }
                     console.log("destination 다 불러옴")

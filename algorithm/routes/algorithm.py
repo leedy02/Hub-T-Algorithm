@@ -24,7 +24,7 @@ def measure(start, end) :
 def xy_to_land(xy):
     x = int(xy[0]*100)
     y = int(xy[1]*100)
-    return x*36000+y
+    return x*10000+y
 
 
 def dist(a):
@@ -38,6 +38,9 @@ def ip1(a, b):
 def ip2(a, b):
     return dist(a) * dist(b)
 
+dx=[-1,-1,-1,0,0,0,1,1,1]
+dy=[1,0,-1,1,0,-1,1,0,-1]
+
 
 def first_candidate(host_id):
     land_num_set = set()
@@ -49,11 +52,9 @@ def first_candidate(host_id):
         if i['geometry']['type'] != 'Point':
             continue
         land_num = xy_to_land(i['geometry']['coordinates'])
-        land_num -= 36001
-        for j in range(3):
-            for k in range(3):
-                land_num_set.add(land_num+k)
-            land_num += 36000
+        for j in range(9):
+            land_num_set.add(land_num+(dx[j]*10000+dy[j]))
+        
     #land_num_arr에 저장돼있는 land값을 이용하여 user_land테이블에서 가져온 user_id들을 1차후보군으로 선정한다.
     candidate = conn.select_land(land_num_arr=list(land_num_set))
     for i in candidate:

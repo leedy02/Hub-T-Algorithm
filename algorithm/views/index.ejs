@@ -163,7 +163,8 @@
             alg_data.third.third_candidate.map(data => {
                 var target = c_data.find(value => value != null && value.id == data[0]);
                 alg_marker[3][3].push(drawMarker("customer_00", target.current, false));
-                alg_marker[3][3].push(drawLine(getWayPoint(data[1]), "#008000", false));
+                if(alg_data.third.last_candidate[0] == data[0]) alg_marker[3][3].push(drawLine(getWayPoint(data[1]), "#008000", false));
+                else alg_marker[3][3].push(drawLine(getWayPoint(data[1]), "#808080", false));
             })
             alg_marker[3][4] = [];
             var target = c_data.find(value => value != null && value.id == alg_data.third.last_candidate[0]);
