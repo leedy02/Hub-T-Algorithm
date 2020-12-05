@@ -22,39 +22,180 @@
             width: 100%;
             height: 100%;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 
 <body>
     <div id="map"></div>
+    <div id="alg_box" class="hidden" style="z-index: 1; position: absolute; top:0; left:0; background-color: rgba(0,0,0,0.5); padding: 10px;">
+        <input type="checkbox" title="전체보기" onchange="showAll(this)" checked><span style="color: white;">호출 전 화면 보기</span>
+        <select id="algorithm" disabled onchange="showAlg()">
+            <option value="1">1번 알고리즘</option>
+            <option value="2">2번 알고리즘</option>
+            <option value="3">3번 알고리즘</option>
+        </select>
+        <select id="candidate" disabled onchange="showAlg()">
+            <option value="1">1차 후보군</option>
+            <option value="2">2차 후보군</option>
+            <option value="3">3차 후보군</option>
+            <option value="4">최종</option>
+        </select>
+    </div>
     <div style="z-index: 1; position: absolute; bottom: 0; right: 0;">
-        <button onclick="createHost()">host 경로 생성</button>
-        <button onclick="callAlgorithm()">알고리즘 호출!</button>
+        <button id="create_host" onclick="createHost()">host 경로 생성</button>
+        <button id="call_alg" onclick="callAlgorithm()" disabled>알고리즘 호출!</button>
     </div>
     <script>
-        var c_marker = [];
-        var t_marker = [];
+        var c_marker = []; // 전체 고객 위치
+        var t_marker = []; // 택시 위치 (갱신)
+        var alg_marker = [];
+        var c_line = [];
+        var t_line = [];
         var c_data = null;
         var t_data = null;
 
+        var alg_data = null;
+
         var socket = io();
+
+        if(alg_data == null) {
+            // 만약 저장된 데이터 있을 경우 받아오기
+            socket.emit("algorithm", false);
+        }
+
+        // 마커 보여주는 방식
+        function showAll(obj) {
+            if(obj.checked) {
+                if(previous != null) {
+                    alg_marker[previous.alg][previous.candidate].map(v => v.setMap(null));
+                }
+                document.getElementById("algorithm").disabled = true;
+                document.getElementById("candidate").disabled = true;
+                c_marker.map(c => c.setMap(map));
+            }
+            else {
+                document.getElementById("algorithm").disabled = false;
+                document.getElementById("candidate").disabled = false;
+                c_marker.map(c => c.setMap(null));
+                showAlg();
+            }
+        }
+
+        var previous = null;
+
+        function showAlg() {
+            // 전에 보여줬던 데이터 있을 경우 지우기
+            if(previous != null) {
+                alg_marker[previous.alg][previous.candidate].map(v => v.setMap(null));
+            }
+            var alg_v = parseInt(document.getElementById("algorithm").value);
+            var candidate_v = parseInt(document.getElementById("candidate").value);
+            alg_marker[alg_v][candidate_v].map(v => v.setMap(map));
+            previous = {}
+            previous.alg = alg_v;
+            previous.candidate = candidate_v;
+        }
+
+        function setAlg() {
+            if(alg_data == null || c_data == null) return;
+            // 1번 알고리즘
+            alg_marker[1] = [];
+            alg_marker[1][1] = [];
+            alg_data.first.first_candidate.map(id => {
+                var target = c_data.find(value => value != null && value.id == id);
+                alg_marker[1][1].push(drawMarker("customer_00", target.current, false));
+            })
+            alg_marker[1][2] = [];
+            alg_data.first.second_candidate.map(id => {
+                var target = c_data.find(value => value != null && value.id == id);
+                alg_marker[1][2].push(drawMarker("customer_00", target.current, false));
+            })
+            alg_marker[1][3] = [];
+            alg_data.first.third_candidate.map(data => {
+                var target = c_data.find(value => value != null && value.id == data[0]);
+                alg_marker[1][3].push(drawMarker("customer_00", target.current, false));
+                if(alg_data.first.last_candidate[0] == data[0]) alg_marker[1][3].push(drawLine(getWayPoint(data[1]), "#008000", false));
+                else alg_marker[1][3].push(drawLine(getWayPoint(data[1]), "#808080", false));
+            })
+            alg_marker[1][4] = [];
+            var target = c_data.find(value => value != null && value.id == alg_data.first.last_candidate[0]);
+            alg_marker[1][4].push(drawMarker("customer_00", target.current, false));
+            alg_marker[1][4].push(drawLine(getWayPoint(alg_data.first.last_candidate[1]), "#0000FF", false));
+            // 2번 알고리즘
+            alg_marker[2] = [];
+            alg_marker[2][1] = [];
+            alg_data.second.first_candidate.map(id => {
+                var target = c_data.find(value => value != null && value.id == id);
+                alg_marker[2][1].push(drawMarker("customer_00", target.current, false));
+            })
+            alg_marker[2][2] = [];
+            alg_data.second.second_candidate.map(id => {
+                var target = c_data.find(value => value != null && value.id == id);
+                alg_marker[2][2].push(drawMarker("customer_00", target.current, false));
+            })
+            alg_marker[2][3] = [];
+            alg_data.second.third_candidate.map(data => {
+                var target = c_data.find(value => value != null && value.id == data[0]);
+                alg_marker[2][3].push(drawMarker("customer_00", target.current, false));
+                if(alg_data.second.last_candidate[0] == data[0]) alg_marker[2][3].push(drawLine(getWayPoint(data[1]), "#008000", false));
+                else alg_marker[2][3].push(drawLine(getWayPoint(data[1]), "#808080", false));
+            })
+            alg_marker[2][4] = [];
+            var target = c_data.find(value => value != null && value.id == alg_data.second.last_candidate[0]);
+            alg_marker[2][4].push(drawMarker("customer_00", target.current, false));
+            alg_marker[2][4].push(drawLine(getWayPoint(alg_data.second.last_candidate[1]), "#0000FF", false));
+            // 3번 알고리즘
+            alg_marker[3] = [];
+            alg_marker[3][1] = [];
+            alg_data.third.first_candidate.map(id => {
+                var target = c_data.find(value => value != null && value.id == id);
+                alg_marker[3][1].push(drawMarker("customer_00", target.current, false));
+            })
+            alg_marker[3][2] = [];
+            alg_data.third.second_candidate.map(id => {
+                var target = c_data.find(value => value != null && value.id == id);
+                alg_marker[3][2].push(drawMarker("customer_00", target.current, false));
+            })
+            alg_marker[3][3] = [];
+            alg_data.third.third_candidate.map(data => {
+                var target = c_data.find(value => value != null && value.id == data[0]);
+                alg_marker[3][3].push(drawMarker("customer_00", target.current, false));
+                alg_marker[3][3].push(drawLine(getWayPoint(data[1]), "#008000", false));
+            })
+            alg_marker[3][4] = [];
+            var target = c_data.find(value => value != null && value.id == alg_data.third.last_candidate[0]);
+            alg_marker[3][4].push(drawMarker("customer_00", target.current, false));
+            alg_marker[3][4].push(drawLine(getWayPoint(alg_data.third.last_candidate[1]), "#0000FF", false));
+        }
 
         socket.on("taxi", data => {
             t_data = data;
+            t_marker.map(t => t.setMap(null));
+            t_line.map(t => t.setMap(null));
+            t_marker = [];
+            t_line = [];
             drawTaxiMarker();
+            drawTaxiLine();
         })
 
         socket.on("customer", data => {
             console.log("전송받음");
             c_data = data;
             drawCustomerMarker();
+            setAlg();
         })
 
-        socket.on("candidate",data=>{
+        socket.on("candidate", data => {
             console.log("후보군 받아옴");
-            console.log(data);
+            document.getElementById("create_host").disabled = true;
+            document.getElementById("call_alg").disabled = true;
+            document.getElementById("alg_box").classList.remove("hidden");
+            alg_data = data;
+            setAlg();
         })
-
         // 지도 생성
         var map = new kakao.maps.Map(document.getElementById('map'), {
             center: new kakao.maps.LatLng(37.45149, 126.6542767),
@@ -77,12 +218,14 @@
                 manual_data.end = new GPS(e.latLng.getLat(),e.latLng.getLng());
                 manual = "idle";
                 console.log("호스트 경로 - 설정 완료");
+                document.getElementById("call_alg").disabled = false;
                 socket.emit("taxi", manual_data);
             }
         })
 
         function createHost() {
             if(manual == "idle") {
+                document.getElementById("create_host").disabled = true;
                 manual = "start";
                 console.log("호스트 경로 - 출발지");
             }
@@ -90,6 +233,7 @@
 
         function callAlgorithm() {
             var algorithm = true;
+            document.getElementById("call_alg").disabled = true;
             socket.emit("algorithm",algorithm)
             console.log("알고리즘 호출");
         }
@@ -102,18 +246,52 @@
         }
 
         function drawTaxiMarker() {
-            t_marker.map(t => t.setMap(null));
             for(t of t_data) {
                 if(t != null) t_marker.push(drawMarker("taxi", t.current));
             }
         }
 
-        function drawMarker(type, latlng) {
+        function drawMarker(type, latlng, show = true) {
             var position = new kakao.maps.LatLng(latlng.latitude, latlng.longitude);
-            var image = new kakao.maps.MarkerImage('./images/' + type + '.png', new kakao.maps.Size(30, 30));
+            var size = type == "taxi" ? new kakao.maps.Size(45, 45) : new kakao.maps.Size(30, 30)
+            var image = new kakao.maps.MarkerImage('./images/' + type + '.png', size);
             var point = new kakao.maps.Marker({ position: position, image: image });
-            point.setMap(map);
+            if(show) point.setMap(map);
             return point;
+        }
+
+        function drawTaxiLine() {
+            for(t of t_data) {
+                if(t != null) t_line.push(drawLine(getWayPoint(t.route), "#FF0000"));
+            }
+        }
+
+        function drawLine(waypoint, color, show = true) {
+            var point = [];
+            waypoint.map(value => {
+                point.push(new kakao.maps.LatLng(value.latitude, value.longitude));
+            })
+            var line = new kakao.maps.Polyline({
+                path: point,
+                strokeWeight: 4,
+                strokeColor: color,
+                strokeOpacity: 0.7,
+                strokeStyle: 'solid'
+            });
+            if(show) line.setMap(map);
+            return line;
+        }
+
+        function getWayPoint(route) {
+            var waypoint = [];
+            for (let i = 0; i < route.features.length; i++) {
+                if (route.features[i].geometry.type != 'Point') {
+                    for (let j = 0; j < route.features[i].geometry.coordinates.length; j++) {
+                        waypoint.push({latitude : route.features[i].geometry.coordinates[j][1], longitude: route.features[i].geometry.coordinates[j][0]});
+                    }
+                }
+            }
+            return waypoint;
         }
     </script>
 </body>
