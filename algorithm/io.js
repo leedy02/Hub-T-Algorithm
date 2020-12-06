@@ -39,7 +39,6 @@ setInterval(async () => {
             if (customer.state == "MATCH") {
                 customer.state = "RIDE"
                 t.drive()
-                //join 함수 호출시 횟수도 넘겨줌
             }
             else {
                 if (customer.state == "RIDE") {
@@ -58,7 +57,6 @@ setInterval(async () => {
     })
 }, 1000)
 
-var alg_data = null;
 
 module.exports = function (server) {
     var io = require('socket.io')(server);
@@ -74,6 +72,7 @@ module.exports = function (server) {
             socket.emit('taxi', taxi_list);
         }, 1000);
 
+        //택시, 고객 생성 destination, drive_info 설정  db삽입
         socket.on("taxi", async data => {
             if (taxi_list.length == 0) {
                 var taxi = new Taxi(data.start);
@@ -99,19 +98,13 @@ module.exports = function (server) {
                     third: null
                 }
                 taxi_list[taxi_list.length - 1].driveClear();
+                //알고리즘 1,2,3 호출
                 candidate.first = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 1);
                 candidate.second = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 2);
                 candidate.third = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 3);
                 if (candidate.first != null && candidate.second != null && candidate.third != null) {
-                    alg_data = candidate;
                     socket.emit("candidate", candidate);
                     console.log("알고리즘 데이터 수신 완료");
-                }
-            }
-            else {
-                if(alg_data != null) {
-                    socket.emit("candidate", alg_data);
-                    console.log("저장된 데이터 송신")
                 }
             }
         })
@@ -119,7 +112,8 @@ module.exports = function (server) {
         socket.on('resume', data => {
             // 여기에 시작했을 때의 행동 정의
             // data는 채택한 알고리즘의 번호 (1,2,3)
-            console.log(data);
+            //다시 taxi 실행
+            taxi_list[0].drive();
         })
 
         socket.on('disconnect', socket => {

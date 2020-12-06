@@ -17,6 +17,7 @@ class Customer{
 
         this.land = GPS.getLand(this.current);
 
+        //상태 MATCH, RIDE, WAIT, ARRIVE
         this.state = "WAIT";
     }
 
