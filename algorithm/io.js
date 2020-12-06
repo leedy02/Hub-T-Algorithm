@@ -116,6 +116,12 @@ module.exports = function (server) {
             }
         })
 
+        socket.on('resume', data => {
+            // 여기에 시작했을 때의 행동 정의
+            // data는 채택한 알고리즘의 번호 (1,2,3)
+            console.log(data);
+        })
+
         socket.on('disconnect', socket => {
             clearInterval(loop);
             console.log("disconnected");

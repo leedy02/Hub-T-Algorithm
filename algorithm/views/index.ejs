@@ -61,6 +61,9 @@
 
         var socket = io();
 
+        var resume = false;
+        var resume_start = false;
+
         if(alg_data == null) {
             // 만약 저장된 데이터 있을 경우 받아오기
             socket.emit("algorithm", false);
@@ -77,7 +80,7 @@
                 c_marker.map(c => c.setMap(map));
             }
             else {
-                document.getElementById("algorithm").disabled = false;
+                if(!resume_start) document.getElementById("algorithm").disabled = false;
                 document.getElementById("candidate").disabled = false;
                 c_marker.map(c => c.setMap(null));
                 showAlg();
@@ -192,7 +195,9 @@
         socket.on("candidate", data => {
             console.log("후보군 받아옴");
             document.getElementById("create_host").disabled = true;
-            document.getElementById("call_alg").disabled = true;
+            document.getElementById("call_alg").disabled = false;
+            document.getElementById("call_alg").innerText = "택시 재개";
+            resume = true;
             document.getElementById("alg_box").classList.remove("hidden");
             alg_data = data;
             setAlg();
@@ -233,10 +238,19 @@
         }
 
         function callAlgorithm() {
-            var algorithm = true;
-            document.getElementById("call_alg").disabled = true;
-            socket.emit("algorithm",algorithm)
-            console.log("알고리즘 호출");
+            if(resume) {
+                console.log("택시 재개")
+                socket.emit("resume", parseInt(document.getElementById("algorithm").value));
+                document.getElementById("algorithm").disabled = true;
+                document.getElementById("call_alg").disabled = true;
+                resume_start = true;
+            }
+            else {
+                var algorithm = true;
+                document.getElementById("call_alg").disabled = true;
+                socket.emit("algorithm",algorithm)
+                console.log("알고리즘 호출");
+            }
         }
 
         // 마커 생성
