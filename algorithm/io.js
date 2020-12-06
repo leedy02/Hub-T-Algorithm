@@ -88,6 +88,7 @@ module.exports = function (server) {
             }
         })
 
+        var alg_data =null;
         // true로 보내면 직접 탐색
         // false로 보내면 데이터 있을 경우 송신
         socket.on('algorithm', async data => {
@@ -103,8 +104,15 @@ module.exports = function (server) {
                 candidate.second = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 2);
                 candidate.third = await drive_list[drive_list.length - 1].join(taxi_list[0].customer[0].id, 3);
                 if (candidate.first != null && candidate.second != null && candidate.third != null) {
+                    alg_data = candidate;
                     socket.emit("candidate", candidate);
                     console.log("알고리즘 데이터 수신 완료");
+                }
+            }
+            else{
+                if(alg_data != null) {
+                    socket.emit("candidate", alg_data);
+                    console.log("저장된 데이터 송신")
                 }
             }
         })
