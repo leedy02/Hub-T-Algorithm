@@ -57,6 +57,7 @@ setInterval(async () => {
     })
 }, 1000)
 
+var alg_data = null;
 
 module.exports = function (server) {
     var io = require('socket.io')(server);
@@ -88,7 +89,6 @@ module.exports = function (server) {
             }
         })
 
-        var alg_data =null;
         // true로 보내면 직접 탐색
         // false로 보내면 데이터 있을 경우 송신
         socket.on('algorithm', async data => {
@@ -121,6 +121,7 @@ module.exports = function (server) {
             // 여기에 시작했을 때의 행동 정의
             // data는 채택한 알고리즘의 번호 (1,2,3)
             //다시 taxi 실행
+            alg_data = null;
             taxi_list[0].drive();
         })
 

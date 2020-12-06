@@ -31,7 +31,7 @@
 <body>
     <div id="map"></div>
     <div id="alg_box" class="hidden" style="z-index: 1; position: absolute; top:0; left:0; background-color: rgba(0,0,0,0.5); padding: 10px;">
-        <input type="checkbox" title="전체보기" onchange="showAll(this)" checked><span style="color: white;">호출 전 화면 보기</span>
+        <input id="check" type="checkbox" title="전체보기" onchange="showAll()" checked><span style="color: white;">호출 전 화면 보기</span>
         <select id="algorithm" disabled onchange="showAlg()">
             <option value="1">1번 알고리즘</option>
             <option value="2">2번 알고리즘</option>
@@ -45,8 +45,9 @@
         </select>
     </div>
     <div style="z-index: 1; position: absolute; bottom: 0; right: 0;">
-        <button id="create_host" onclick="createHost()">host 경로 생성</button>
+        <button id="create_host" onclick="createHost()" disabled>host 경로 생성</button>
         <button id="call_alg" onclick="callAlgorithm()" disabled>알고리즘 호출!</button>
+        <button id="resume" onclick="resumeTaxi()" class="hidden">택시 운행 재개</button>
     </div>
     <script>
         var c_marker = []; // 전체 고객 위치
@@ -61,17 +62,15 @@
 
         var socket = io();
 
-        var resume = false;
-        var resume_start = false;
-
         if(alg_data == null) {
             // 만약 저장된 데이터 있을 경우 받아오기
             socket.emit("algorithm", false);
         }
 
         // 마커 보여주는 방식
-        function showAll(obj) {
-            if(obj.checked) {
+        function showAll() {
+            // 호출 전 데이터
+            if(document.getElementById("check").checked) {
                 if(previous != null) {
                     alg_marker[previous.alg][previous.candidate].map(v => v.setMap(null));
                 }
@@ -79,8 +78,9 @@
                 document.getElementById("candidate").disabled = true;
                 c_marker.map(c => c.setMap(map));
             }
+            // 호출 후 데이터
             else {
-                if(!resume_start) document.getElementById("algorithm").disabled = false;
+                document.getElementById("algorithm").disabled = false;
                 document.getElementById("candidate").disabled = false;
                 c_marker.map(c => c.setMap(null));
                 showAlg();
@@ -124,9 +124,11 @@
                 else alg_marker[1][3].push(drawLine(getWayPoint(data[1]), "#808080", false));
             })
             alg_marker[1][4] = [];
-            var target = c_data.find(value => value != null && value.id == alg_data.first.last_candidate[0]);
-            alg_marker[1][4].push(drawMarker("customer_00", target.current, false));
-            alg_marker[1][4].push(drawLine(getWayPoint(alg_data.first.last_candidate[1]), "#0000FF", false));
+            if(alg_data.first.last_candidate.length != 0) {
+                var target = c_data.find(value => value != null && value.id == alg_data.first.last_candidate[0]);
+                alg_marker[1][4].push(drawMarker("customer_00", target.current, false));
+                alg_marker[1][4].push(drawLine(getWayPoint(alg_data.first.last_candidate[1]), "#0000FF", false));
+            }
             // 2번 알고리즘
             alg_marker[2] = [];
             alg_marker[2][1] = [];
@@ -147,9 +149,11 @@
                 else alg_marker[2][3].push(drawLine(getWayPoint(data[1]), "#808080", false));
             })
             alg_marker[2][4] = [];
-            var target = c_data.find(value => value != null && value.id == alg_data.second.last_candidate[0]);
-            alg_marker[2][4].push(drawMarker("customer_00", target.current, false));
-            alg_marker[2][4].push(drawLine(getWayPoint(alg_data.second.last_candidate[1]), "#0000FF", false));
+            if(alg_data.second.last_candidate.length != 0) {
+                var target = c_data.find(value => value != null && value.id == alg_data.second.last_candidate[0]);
+                alg_marker[2][4].push(drawMarker("customer_00", target.current, false));
+                alg_marker[2][4].push(drawLine(getWayPoint(alg_data.second.last_candidate[1]), "#0000FF", false));
+            }
             // 3번 알고리즘
             alg_marker[3] = [];
             alg_marker[3][1] = [];
@@ -170,12 +174,18 @@
                 else alg_marker[3][3].push(drawLine(getWayPoint(data[1]), "#808080", false));
             })
             alg_marker[3][4] = [];
-            var target = c_data.find(value => value != null && value.id == alg_data.third.last_candidate[0]);
-            alg_marker[3][4].push(drawMarker("customer_00", target.current, false));
-            alg_marker[3][4].push(drawLine(getWayPoint(alg_data.third.last_candidate[1]), "#0000FF", false));
+            if(alg_data.third.last_candidate.length != 0) {
+                var target = c_data.find(value => value != null && value.id == alg_data.third.last_candidate[0]);
+                alg_marker[3][4].push(drawMarker("customer_00", target.current, false));
+                alg_marker[3][4].push(drawLine(getWayPoint(alg_data.third.last_candidate[1]), "#0000FF", false));
+            }
         }
 
         socket.on("taxi", data => {
+            if(data.length == 0 && manual == "idle") document.getElementById("create_host").disabled = false;
+            else document.getElementById("create_host").disabled = true;
+            if(data.length != 0 && alg_data == null) document.getElementById("call_alg").disabled = false;
+            else document.getElementById("call_alg").disabled = true;
             t_data = data;
             t_marker.map(t => t.setMap(null));
             t_line.map(t => t.setMap(null));
@@ -195,9 +205,8 @@
         socket.on("candidate", data => {
             console.log("후보군 받아옴");
             document.getElementById("create_host").disabled = true;
-            document.getElementById("call_alg").disabled = false;
-            document.getElementById("call_alg").innerText = "택시 재개";
-            resume = true;
+            document.getElementById("call_alg").classList.add("hidden");
+            document.getElementById("resume").classList.remove("hidden");
             document.getElementById("alg_box").classList.remove("hidden");
             alg_data = data;
             setAlg();
@@ -238,21 +247,25 @@
         }
 
         function callAlgorithm() {
-            if(resume) {
-                console.log("택시 재개")
-                socket.emit("resume", parseInt(document.getElementById("algorithm").value));
-                document.getElementById("algorithm").disabled = true;
-                document.getElementById("call_alg").disabled = true;
-                resume_start = true;
-            }
-            else {
-                var algorithm =true;
-                document.getElementById("call_alg").disabled = true;
-                socket.emit("algorithm",algorithm)
-                console.log("알고리즘 호출");
-            }
+            var algorithm =true;
+            document.getElementById("call_alg").disabled = true;
+            socket.emit("algorithm",algorithm)
+            console.log("알고리즘 호출");
         }
 
+        function resumeTaxi() {
+            console.log("택시 재개")
+            socket.emit("resume", null);
+            document.getElementById("check").checked = true;
+            showAll();
+            alg_marker = [];
+            alg_data = null;
+            document.getElementById("algorithm").disabled = true;
+            document.getElementById("call_alg").disabled = false;
+            document.getElementById("alg_box").classList.add("hidden");
+            document.getElementById("resume").classList.add("hidden");
+            document.getElementById("call_alg").classList.remove("hidden");
+        }
         // 마커 생성
         function drawCustomerMarker() {
             for(c of c_data) {
