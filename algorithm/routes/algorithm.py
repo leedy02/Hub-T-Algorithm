@@ -4,9 +4,9 @@ import math
 import json
 import sys
 import math
-from scipy.spatial import distance
 import sys
 import os
+import random
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from config import dbconfig
 from config import t_config
@@ -76,6 +76,7 @@ def chk_pref(a_prof, a_pref, b_prof, b_pref):
 
 def second_candidate(host_id, candidate_arr):
     second_candidate_arr = []
+    '''
     host_prefer = conn.select_prefer([host_id,host_id])[0]
     host_profile = conn.select_profile([host_id,host_id])[0]
     guest_prefer = conn.select_prefer(candidate_arr)
@@ -84,9 +85,15 @@ def second_candidate(host_id, candidate_arr):
         if chk_pref(host_profile, host_prefer, guest_profile[i], guest_prefer[i]) == True:
             ret['second_candidate'].append(candidate_arr[i])
             second_candidate_arr.append(candidate_arr[i])
+    '''
+    for i in candidate_arr:
+        if random.random() < 0.5:
+            second_candidate_arr.append(i)
+            ret['second_candidate'].append(i)
     if len(second_candidate_arr) == 0:
         print(json.dumps(ret))
         return
+
     if sys.argv[2] == 1 or sys.argv[2] == '1':
         third_candidate_1(host_id, second_candidate_arr)
     elif sys.argv[2] == 2 or sys.argv[2] == '2':
@@ -103,14 +110,20 @@ def third_candidate_1(host_id, candidate_arr):
     host_dist = measure(host_s,host_e)
     guest_d = conn.select_d(candidate_arr)
     mn = 1000
-    for i in range(len(guest_d)):
-        guest_s = [guest_d[i][0],guest_d[i][1]]
-        guest_e = [guest_d[i][2], guest_d[i][3]]
-        guest_dist = measure(guest_s,guest_e)
-        dist_sum = measure(host_s, guest_s) + measure(host_e, guest_e) + min(measure(guest_s, host_e), measure(guest_s, guest_e))
-        if dist_sum <= 1.0*(host_dist+guest_dist):
-            mn = min(mn,dist_sum/(host_dist+guest_dist))
-            third_candidate_arr.append(candidate_arr[i])
+    threshold = 1.0
+    while True:
+        third_candidate_arr.clear()
+        for i in range(len(guest_d)):
+            guest_s = [guest_d[i][0],guest_d[i][1]]
+            guest_e = [guest_d[i][2], guest_d[i][3]]
+            guest_dist = measure(guest_s,guest_e)
+            dist_sum = measure(host_s, guest_s) + measure(host_e, guest_e) + min(measure(guest_s, host_e), measure(guest_s, guest_e))
+            if dist_sum <= threshold*(host_dist+guest_dist):
+                mn = min(mn,dist_sum/(host_dist+guest_dist))
+                third_candidate_arr.append(candidate_arr[i])
+        if len(third_candidate_arr) < 10:
+            break
+        threshold *= 0.9
     if len(third_candidate_arr) == 0:
         print(json.dumps(ret))
         return
@@ -124,12 +137,18 @@ def third_candidate_2(host_id, candidate_arr):
     host_e = [host_d[2], host_d[3]]
     host_v = [host_e[0] - host_s[0], host_e[1] - host_s[1]]
     guest_d = conn.select_d(candidate_arr)
-    for i in range(len(candidate_arr)):
-        guest_s = [guest_d[i][0], guest_d[i][1]]
-        guest_e = [guest_d[i][2], guest_d[i][3]]
-        guest_v = [guest_e[0] - guest_s[0], guest_e[1] - guest_s[1]]
-        if ip1(host_v,guest_v)/ip2(host_v,guest_v) > math.sqrt(2)/2:
-            third_candidate_arr.append(candidate_arr[i])
+    threshold = math.sqrt(2)/2
+    while True:
+        third_candidate_arr.clear()
+        for i in range(len(candidate_arr)):
+            guest_s = [guest_d[i][0], guest_d[i][1]]
+            guest_e = [guest_d[i][2], guest_d[i][3]]
+            guest_v = [guest_e[0] - guest_s[0], guest_e[1] - guest_s[1]]
+            if ip1(host_v,guest_v)/ip2(host_v,guest_v) > threshold:
+                third_candidate_arr.append(candidate_arr[i])
+        if len(third_candidate_arr) < 10:
+            break
+        threshold += (1-threshold)/2
     if len(third_candidate_arr) == 0:
         print(json.dumps(ret))
         return
@@ -150,15 +169,21 @@ def third_candidate_weight_1(host_id, candidate_arr):
     host_dist = measure(host_s, host_e)
     guest_d = conn.select_d(candidate_arr)
     mn = 1000
-    for i in range(len(guest_d)):
-        guest_s = [guest_d[i][0], guest_d[i][1]]
-        guest_e = [guest_d[i][2], guest_d[i][3]]
-        guest_dist = measure(guest_s, guest_e)
-        dist_sum = measure(host_s, guest_s) + measure(host_e, guest_e) + min(measure(guest_s, host_e),
-                                                                             measure(guest_s, guest_e))
-        if dist_sum <= 1.0 * (host_dist + guest_dist):
-            mn = min(mn, dist_sum / (host_dist + guest_dist))
-            third_candidate_arr.append(candidate_arr[i])
+    threshold = 1.0
+    while True:
+        third_candidate_arr.clear()
+        for i in range(len(guest_d)):
+            guest_s = [guest_d[i][0], guest_d[i][1]]
+            guest_e = [guest_d[i][2], guest_d[i][3]]
+            guest_dist = measure(guest_s, guest_e)
+            dist_sum = measure(host_s, guest_s) + measure(host_e, guest_e) + min(measure(guest_s, host_e),
+                                                                                 measure(guest_s, guest_e))
+            if dist_sum <= threshold * (host_dist + guest_dist):
+                mn = min(mn, dist_sum / (host_dist + guest_dist))
+                third_candidate_arr.append(candidate_arr[i])
+        if len(third_candidate_arr) < 10:
+            break
+        threshold *= 0.9
     if len(third_candidate_arr) == 0:
         print(json.dumps(ret))
         return
